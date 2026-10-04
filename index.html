@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Semsar - سمسار | منصة الإيجار العقاري</title>
+    
+    <!-- PWA & Mobile App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="سمسار">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="سمسار">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBg: '#F8FAFC',
+                        brandCard: '#FFFFFF',
+                        brandPrimary: '#0F172A',
+                        brandGold: '#C5A059',
+                        brandGoldLight: '#DFBA73',
+                        brandGray: '#64748B'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            padding-bottom: 110px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-brandBg text-brandPrimary min-h-screen" onclick="closeAllDropdowns(event)">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
+
+    <!-- Header -->
+    <header class="bg-brandCard border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+        <div class="container mx-auto px-6 py-3.5 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 bg-brandPrimary rounded-xl flex items-center justify-center text-brandGold font-black text-xl shadow-md">س</div>
+                <div>
+                    <h1 class="text-lg font-black tracking-wider text-brandPrimary">سمسار <span class="text-brandGold text-xs font-normal">SEMSAR</span></h1>
+                    <p class="text-[10px] text-brandGray">منصتك الأولى للإيجار العقاري</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="switchTab('admin')" class="bg-brandGold/10 border border-brandGold text-brandGold hover:bg-brandGold hover:text-white p-2 rounded-xl text-xs flex items-center gap-1 transition font-bold">
+                    <i class="fa-solid fa-lock"></i> <span class="hidden md:inline">لوحة الإدارة</span>
+                </button>
+                <button onclick="switchTab('crm')" class="bg-brandBg border border-gray-200 hover:border-brandGold text-brandPrimary p-2 rounded-xl text-xs flex items-center gap-1 transition">
+                    <i class="fa-solid fa-user-shield text-brandGold"></i> <span class="hidden md:inline">الطلبات</span>
+                </button>
+                <a href="https://wa.me/201000000000" target="_blank" class="bg-brandGold hover:bg-brandGoldLight text-white font-bold px-3 py-2 rounded-xl shadow transition flex items-center space-x-1.5 space-x-reverse text-xs">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <span>تواصل</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- TAB 1: RENTALS HOME / BROWSE SCREEN -->
+    <div id="tab-rentals" class="tab-content py-6 px-6 container mx-auto max-w-2xl space-y-6">
+        
+        <!-- Search & Filter Header Box -->
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4 text-right">
+            <div>
+                <h2 class="text-xl font-black text-brandPrimary flex items-center gap-2">
+                    <i class="fa-solid fa-key text-brandGold"></i> ابحث عن وحدتك للإيجار
+                </h2>
+                <p class="text-xs text-brandGold font-bold mt-1">✨ اختيارك الذكي لبيتك وعقارك بكل سهولة.</p>
+                <p class="text-[11px] text-brandGray mt-0.5">تصفح الوحدات السكنية، المصايف، والتجارية المتاحة للإيجار.</p>
+            </div>
+            
+            <!-- Search Input -->
+            <div class="bg-brandBg p-3 rounded-xl border border-gray-200 flex items-center space-x-3 space-x-reverse">
+                <i class="fa-solid fa-search text-brandGold text-base mr-2"></i>
+                <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="البحث باسم الوحدة، المنطقة، أو المواصفات..." class="w-full bg-transparent text-xs focus:outline-none text-brandPrimary placeholder-gray-400 font-bold">
+            </div>
+
+            <!-- Price Range Filter -->
+            <div class="space-y-1.5 pt-2 border-t border-gray-100 text-xs">
+                <div class="flex justify-between items-center font-bold text-brandPrimary">
+                    <span>الحد الأقصى للإيجار:</span>
+                    <span id="priceRangeVal" class="text-brandGold font-black">200,000 جنيه</span>
+                </div>
+                <input type="range" id="priceRange" min="5000" max="200000" step="5000" value="200000" oninput="filterByPriceRange(this.value)" class="w-full accent-brandGold cursor-pointer">
+            </div>
+
+            <!-- 1. LOCATION -->
+            <div class="space-y-1.5 pt-2 border-t border-gray-100">
+                <label class="text-[11px] font-bold text-brandGray">المنطقة الرئيسية:</label>
+                <div class="flex gap-3.5 overflow-x-auto hide-scrollbar text-xs pb-2 pt-1">
+                    <div onclick="filterRentalLocation('الكل')" id="rent-loc-الكل" class="rental-loc-btn flex flex-col items-center min-w-[76px] cursor-pointer transition">
+                        <div id="loc-icon-الكل" class="w-14 h-14 rounded-full overflow-hidden mb-1.5 bg-brandGold text-white flex items-center justify-center font-bold shadow-md border-4 border-brandGold scale-110 transition text-lg">🌐</div>
+                        <span class="text-[11px] font-bold text-brandGold">كل الأماكن</span>
+                    </div>
+                    <div onclick="filterRentalLocation('القاهرة الجديدة')" id="rent-loc-القاهرة الجديدة" class="rental-loc-btn flex flex-col items-center min-w-[76px] cursor-pointer transition">
+                        <img id="loc-img-القاهرة الجديدة" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 rounded-full object-cover mb-1.5 border-2 border-gray-200 hover:border-brandGold shadow-sm transition">
+                        <span class="text-[11px] font-bold">القاهرة الجديدة</span>
+                    </div>
+                    <div onclick="filterRentalLocation('الشيخ زايد')" id="rent-loc-الشيخ زايد" class="rental-loc-btn flex flex-col items-center min-w-[76px] cursor-pointer transition">
+                        <img id="loc-img-الشيخ زايد" src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 rounded-full object-cover mb-1.5 border-2 border-gray-200 hover:border-brandGold shadow-sm transition">
+                        <span class="text-[11px] font-bold">الشيخ زايد</span>
+                    </div>
+                    <div onclick="filterRentalLocation('الساحل الشمالي')" id="rent-loc-الساحل الشمالي" class="rental-loc-btn flex flex-col items-center min-w-[76px] cursor-pointer transition">
+                        <img id="loc-img-الساحل الشمالي" src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 rounded-full object-cover mb-1.5 border-2 border-gray-200 hover:border-brandGold shadow-sm transition">
+                        <span class="text-[11px] font-bold">الساحل الشمالي</span>
+                    </div>
+                    <div onclick="filterRentalLocation('الجونة')" id="rent-loc-الجونة" class="rental-loc-btn flex flex-col items-center min-w-[76px] cursor-pointer transition">
+                        <img id="loc-img-الجونة" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 rounded-full object-cover mb-1.5 border-2 border-gray-200 hover:border-brandGold shadow-sm transition">
+                        <span class="text-[11px] font-bold">الجونة</span>
+                    </div>
+                    <div onclick="filterRentalLocation('العين السخنة')" id="rent-loc-العين السخنة" class="rental-loc-btn flex flex-col items-center min-w-[76px] cursor-pointer transition">
+                        <img id="loc-img-العين السخنة" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=150&q=80" class="w-14 h-14 rounded-full object-cover mb-1.5 border-2 border-gray-200 hover:border-brandGold shadow-sm transition">
+                        <span class="text-[11px] font-bold">العين السخنة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. CATEGORY -->
+            <div class="space-y-1.5 pt-2 border-t border-gray-100">
+                <label class="text-[11px] font-bold text-brandGray block">تصنيف العقار:</label>
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar text-xs">
+                    <span onclick="filterRentalCategory('الكل')" id="rcat-الكل" class="rental-cat-btn bg-brandPrimary text-white px-4 py-2 rounded-full font-bold cursor-pointer transition">🌐 الكل</span>
+                    <span onclick="filterRentalCategory('سكني')" id="rcat-سكني" class="rental-cat-btn bg-white text-brandPrimary border border-gray-200 px-4 py-2 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏠 سكني</span>
+                    <span onclick="filterRentalCategory('مصايف')" id="rcat-مصايف" class="rental-cat-btn bg-white text-brandPrimary border border-gray-200 px-4 py-2 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏖️ مصايف</span>
+                    <span onclick="filterRentalCategory('تجاري')" id="rcat-تجاري" class="rental-cat-btn bg-white text-brandPrimary border border-gray-200 px-4 py-2 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🛍️ تجاري</span>
+                </div>
+            </div>
+
+            <!-- RESIDENTIAL COMPOUND SUB-FILTER -->
+            <div id="client-sub-filter-box" class="space-y-1.5 pt-2 border-t border-gray-100 hidden">
+                <label class="text-[11px] font-bold text-brandGray block">نوع الموقع السكني:</label>
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar text-xs">
+                    <span onclick="filterClientSub('الكل')" id="csub-الكل" class="client-sub-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition">الكل</span>
+                    <span onclick="filterClientSub('داخل كومباوند')" id="csub-داخل كومباوند" class="client-sub-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏡 داخل كومباوند</span>
+                    <span onclick="filterClientSub('خارج كومباوند')" id="csub-خارج كومباوند" class="client-sub-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏢 خارج كومباوند</span>
+                </div>
+            </div>
+
+            <!-- PROPERTY SUB-TYPE PILLS -->
+            <div id="property-type-filter-box" class="space-y-1.5 pt-2 border-t border-gray-100 hidden">
+                <label class="text-[11px] font-bold text-brandGray block" id="property-type-label">نوع الوحدة:</label>
+                <div id="property-type-pills-container" class="flex gap-2 overflow-x-auto hide-scrollbar text-xs"></div>
+            </div>
+
+            <!-- VACATION SUB-FILTER -->
+            <div id="vacation-sub-filter-box" class="space-y-1.5 pt-2 border-t border-gray-100 hidden">
+                <label class="text-[11px] font-bold text-brandGray block">وجهات المصايف:</label>
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar text-xs mb-2">
+                    <span onclick="filterVacationSub('الكل')" id="vsub-الكل" class="vsub-btn bg-brandPrimary text-white px-3.5 py-1.5 rounded-full font-bold cursor-pointer transition">كل الوجهات</span>
+                    <span onclick="filterVacationSub('الساحل الشمالي')" id="vsub-الساحل الشمالي" class="vsub-btn bg-white text-brandPrimary border border-gray-200 px-3.5 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🌊 الساحل الشمالي</span>
+                    <span onclick="filterVacationSub('الجونة')" id="vsub-الجونة" class="vsub-btn bg-white text-brandPrimary border border-gray-200 px-3.5 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">⛵ الجونة</span>
+                    <span onclick="filterVacationSub('العين السخنة')" id="vsub-العين السخنة" class="vsub-btn bg-white text-brandPrimary border border-gray-200 px-3.5 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">⛰️ العين السخنة</span>
+                </div>
+                
+                <label class="text-[11px] font-bold text-brandGray block pt-1">نوع وحدة المصايف:</label>
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar text-xs">
+                    <span onclick="filterVacationProp('الكل')" id="vprop-الكل" class="vprop-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition">الكل</span>
+                    <span onclick="filterVacationProp('كابينا')" id="vprop-كابينا" class="vprop-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🛖 كابينا</span>
+                    <span onclick="filterVacationProp('استوديو')" id="vprop-استوديو" class="vprop-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🚪 استوديو</span>
+                    <span onclick="filterVacationProp('شاليه')" id="vprop-شاليه" class="vprop-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏖️ شاليه</span>
+                    <span onclick="filterVacationProp('فيلا')" id="vprop-فيلا" class="vprop-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏰 فيلا</span>
+                </div>
+            </div>
+
+            <!-- 3. DURATION & FURNISHED -->
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100 text-xs">
+                <div class="relative">
+                    <label class="text-[11px] font-bold text-brandGray block mb-1">مدة الإيجار:</label>
+                    <div onclick="toggleDropdown('duration-dropdown', event)" class="bg-brandBg border border-gray-200 hover:border-brandGold text-brandPrimary px-3 py-2 rounded-xl font-bold cursor-pointer flex justify-between items-center transition">
+                        <span id="current-duration-text">🌐 الكل</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-brandGold"></i>
+                    </div>
+                    <div id="duration-dropdown" class="absolute top-full mt-1 right-0 left-0 bg-white border border-gray-200 rounded-xl shadow-lg z-30 hidden overflow-hidden text-right text-xs">
+                        <div onclick="selectDuration('الكل', '🌐 الكل')" class="px-3 py-2 hover:bg-brandBg cursor-pointer font-bold border-b border-gray-50">🌐 الكل</div>
+                        <div onclick="selectDuration('يومي', '⏳ يومي')" class="px-3 py-2 hover:bg-brandBg cursor-pointer font-semibold border-b border-gray-50">⏳ يومي</div>
+                        <div onclick="selectDuration('شهري', '📅 شهري')" class="px-3 py-2 hover:bg-brandBg cursor-pointer font-semibold border-b border-gray-50">📅 شهري</div>
+                        <div onclick="selectDuration('سنوي', '🏛️ سنوي')" class="px-3 py-2 hover:bg-brandBg cursor-pointer font-semibold">🏛️ سنوي</div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label class="text-[11px] font-bold text-brandGray block mb-1">حالة الفرش:</label>
+                    <div onclick="toggleDropdown('furnished-dropdown', event)" class="bg-brandBg border border-gray-200 hover:border-brandGold text-brandPrimary px-3 py-2 rounded-xl font-bold cursor-pointer flex justify-between items-center transition">
+                        <span id="current-furnished-text">🌐 الكل</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-brandGold"></i>
+                    </div>
+                    <div id="furnished-dropdown" class="absolute top-full mt-1 right-0 left-0 bg-white border border-gray-200 rounded-xl shadow-lg z-30 hidden overflow-hidden text-right text-xs">
+                        <div onclick="selectFurnished('الكل', '🌐 الكل')" class="px-3 py-2 hover:bg-brandBg cursor-pointer font-bold border-b border-gray-50">🌐 الكل</div>
+                        <div onclick="selectFurnished('مفروش', '🛋️ مفروش')" class="px-3 py-2 hover:bg-brandBg cursor-pointer font-semibold border-b border-gray-50">🛋️ مفروش بالكامل</div>
+                        <div onclick="selectFurnished('غير مفروش', '🪑 غير مفروش')" class="px-3 py-2 hover:bg-brandBg cursor-pointer font-semibold">🪑 غير مفروش</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="flex justify-between items-center px-1">
+            <h3 id="results-title" class="text-sm font-bold text-brandPrimary">الوحدات المتاحة للإيجار</h3>
+            <span id="results-count" class="text-xs bg-brandGold/10 text-brandGold font-bold px-2.5 py-1 rounded-full">0 وحدة</span>
+        </div>
+
+        <div id="rentals-list-container" class="space-y-6"></div>
+    </div>
+
+    <!-- TAB 2: WISHLIST SCREEN -->
+    <div id="tab-wishlist" class="tab-content hidden py-8 px-6 container mx-auto max-w-2xl space-y-4">
+        <h3 class="text-lg font-bold text-brandPrimary flex items-center gap-2">
+            <i class="fa-solid fa-heart text-red-500"></i> وحدات الإيجار المفضلة
+        </h3>
+        <p class="text-[11px] text-brandGray">اضغط على أي وحدة لعرض تفاصيلها بالكامل أو تواصل بشأنها.</p>
+        <div id="wishlist-container" class="space-y-4">
+            <div class="text-center py-12 text-brandGray text-xs bg-white rounded-2xl border border-gray-200">
+                لم تقم بحفظ أي وحدات في المفضلة بعد.
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: CRM / LEADS SCREEN -->
+    <div id="tab-crm" class="tab-content hidden py-8 px-6 container mx-auto max-w-2xl space-y-4">
+        <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+            <div>
+                <h3 class="text-base font-bold text-brandPrimary flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-brandGold"></i> طلبات معاينة الإيجار (CRM)
+                </h3>
+                <p class="text-[11px] text-brandGray">سجل طلبات معاينة وحجز الوحدات المستلمة.</p>
+            </div>
+            <button onclick="clearCRM()" class="text-red-500 text-xs bg-red-50 px-3 py-1.5 rounded-xl font-semibold">مسح السجل</button>
+        </div>
+        <div id="crm-leads-container" class="space-y-3">
+            <div class="text-center py-10 text-brandGray text-xs bg-white rounded-2xl border border-gray-200">
+                لا توجد طلبات مسجلة حتى الآن.
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: ADMIN DASHBOARD -->
+    <div id="tab-admin" class="tab-content hidden py-8 px-6 container mx-auto max-w-2xl space-y-6">
+        <div id="admin-login-box" class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4 text-right">
+            <h3 class="text-base font-black text-brandPrimary flex items-center gap-2">
+                <i class="fa-solid fa-lock text-brandGold"></i> تسجيل دخول لوحة تحكم سمسار
+            </h3>
+            <p class="text-xs text-brandGray">أدخل كلمة المرور لإدارة وحدات الإيجار (الباسورد الافتراضي: omar2026).</p>
+            <div>
+                <label class="block text-xs font-bold text-brandGray mb-1">كلمة المرور</label>
+                <input type="password" id="adminPasswordInput" placeholder="أدخل كلمة المرور" class="w-full bg-brandBg border border-gray-200 rounded-xl p-3 text-xs font-bold focus:outline-none focus:border-brandGold">
+            </div>
+            <button onclick="verifyAdminLogin()" class="w-full bg-brandPrimary text-white py-3 rounded-xl font-bold text-xs shadow hover:bg-slate-800 transition">دخول لوحة التحكم</button>
+        </div>
+
+        <div id="admin-dashboard-box" class="space-y-6 hidden">
+            <div class="bg-white rounded-2xl border border-brandGold/30 p-5 shadow-sm space-y-3 text-right">
+                <h3 class="text-xs font-black text-brandGold flex items-center gap-2">
+                    <i class="fa-solid fa-key"></i> تغيير كلمة مرور لوحة التحكم
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <input type="password" id="newAdminPass" placeholder="كلمة المرور الجديدة" class="bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold">
+                    <button onclick="updateAdminPassword()" class="bg-brandGold text-white py-2.5 rounded-xl font-bold hover:bg-brandGoldLight transition">حفظ الباسورد الجديد</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4 text-right">
+                <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                    <h3 id="form-heading-title" class="text-base font-black text-brandPrimary flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-brandGold"></i> إضافة عقار مرسل للإيجار
+                    </h3>
+                    <button onclick="lockAdmin()" class="text-red-500 text-xs font-bold"><i class="fa-solid fa-right-from-bracket"></i> قفل اللوحة</button>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-brandGray text-xs">تصنيف العقار الأساسي:</label>
+                    <div class="flex gap-2 text-xs">
+                        <button type="button" onclick="setAdminCategory('سكني')" id="adm-cat-سكني" class="admin-cat-btn flex-1 bg-brandPrimary text-white py-2.5 rounded-xl font-bold transition shadow-sm">🏠 سكني</button>
+                        <button type="button" onclick="setAdminCategory('مصايف')" id="adm-cat-مصايف" class="admin-cat-btn flex-1 bg-brandBg text-brandPrimary border border-gray-200 py-2.5 rounded-xl font-semibold transition hover:border-brandGold">🏖️️ مصايف</button>
+                        <button type="button" onclick="setAdminCategory('تجاري')" id="adm-cat-تجاري" class="admin-cat-btn flex-1 bg-brandBg text-brandPrimary border border-gray-200 py-2.5 rounded-xl font-semibold transition hover:border-brandGold">🛍️ تجاري</button>
+                    </div>
+                </div>
+
+                <div id="residential-sub-box" class="space-y-1.5 bg-brandBg p-3 rounded-xl border border-gray-100">
+                    <label id="admin-sub-label" class="block font-bold text-brandGray text-xs">نوع الموقع:</label>
+                    <div class="flex gap-2 text-xs">
+                        <button type="button" onclick="setAdminResType('داخل كومباوند')" id="adm-res-داخل كومباوند" class="admin-res-btn flex-1 bg-brandPrimary text-white py-2 rounded-lg font-bold transition">🏡 داخل كومباوند</button>
+                        <button type="button" onclick="setAdminResType('خارج كومباوند')" id="adm-res-خارج كومباوند" class="admin-res-btn flex-1 bg-white text-brandPrimary border border-gray-200 py-2 rounded-lg font-semibold transition">🏢 خارج كومباوند</button>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-brandGray text-xs">المنطقة الرئيسية:</label>
+                    <div id="admin-regions-container" class="flex gap-2 overflow-x-auto hide-scrollbar text-xs"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">عنوان الوحدة (اسم الإعلان)</label>
+                        <input type="text" id="newTitle" placeholder="مثال: شقة مفروشة في التجمع" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">الموقع بالتفصيل / الشارع</label>
+                        <input type="text" id="newLoc" placeholder="شارع التسعين الشمالي" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none focus:border-brandGold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">قيمة الإيجار الرقمية (بالجنيه)</label>
+                        <input type="number" id="newPriceVal" placeholder="45000" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">نوع الوحدة الفرعي</label>
+                        <select id="newPropType" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none">
+                            <option value="استوديو">استوديو</option>
+                            <option value="شقة" selected>شقة</option>
+                            <option value="دوبلكس">دوبلكس</option>
+                            <option value="تاون هاوس">تاون هاوس</option>
+                            <option value="توين هاوس">توين هاوس</option>
+                            <option value="فيلا منفصلة">فيلا منفصلة</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">مدة الإيجار</label>
+                        <select id="newRentalSub" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none">
+                            <option value="يومي">يومي</option>
+                            <option value="شهري" selected>شهري</option>
+                            <option value="سنوي">سنوي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">حالة الفرش</label>
+                        <select id="newFurnishedStatus" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none">
+                            <option value="مفروش" selected>مفروش</option>
+                            <option value="غير مفروش">غير مفروش</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 1. ميزات إضافية (قائمة جاهزة + كتابة) -->
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">ميزات إضافية (اختار أو اكتب)</label>
+                        <select id="newFeaturesSelect" onchange="document.getElementById('newFeatures').value = this.value === 'custom' ? '' : this.value" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none mb-1">
+                            <option value="مكيف بالكامل / مسموح بالحيوانات الأليفة">مكيف بالكامل / مسموح بالحيوانات الأليفة</option>
+                            <option value="مكيف بالكامل">مكيف بالكامل</option>
+                            <option value="مسموح بالحيوانات الأليفة">مسموح بالحيوانات الأليفة</option>
+                            <option value="فرش مودرن / أول ساكن">فرش مودرن / أول ساكن</option>
+                            <option value="custom">✍️ كتابة ميزة أخرى يدوياً...</option>
+                        </select>
+                        <input type="text" id="newFeatures" value="مكيف بالكامل / مسموح بالحيوانات الأليفة" placeholder="أو اكتب ميزة أخرى هنا..." class="w-full bg-brandBg border border-gray-200 rounded-xl p-2 font-bold focus:outline-none text-[11px]">
+                    </div>
+
+                    <!-- 2. عدد الغرف (بدون مساحات تماماً) -->
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">عدد الغرف (اختار أو اكتب)</label>
+                        <select id="newRoomsSelect" onchange="document.getElementById('newRoomsBaths').value = this.value === 'custom' ? '' : this.value" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none mb-1">
+                            <option value="استوديو">استوديو</option>
+                            <option value="1 غرفة / 1 حمام">1 غرفة / 1 حمام</option>
+                            <option value="2 غرف / 1 حمام">2 غرف / 1 حمام</option>
+                            <option value="2 غرف / 2 حمام">2 غرف / 2 حمام</option>
+                            <option value="3 غرف / 2 حمام" selected>3 غرف / 2 حمام</option>
+                            <option value="3 غرف / 3 حمام">3 غرف / 3 حمام</option>
+                            <option value="4 غرف / 3 حمام">4 غرف / 3 حمام</option>
+                            <option value="فيلا 5 غرف / 5 حمام">فيلا 5 غرف / 5 حمام</option>
+                            <option value="custom">✍️ كتابة تفاصيل أخرى يدوياً...</option>
+                        </select>
+                        <input type="text" id="newRoomsBaths" value="3 غرف / 2 حمام" placeholder="أو اكتب الغرف والحمامات هنا..." class="w-full bg-brandBg border border-gray-200 rounded-xl p-2 font-bold focus:outline-none text-[11px]">
+                    </div>
+
+                    <!-- 3. إطلالة الوحدة View (قائمة جاهزة + كتابة) -->
+                    <div>
+                        <label class="block font-bold text-brandGray mb-1">إطلالة الوحدة View (اختار أو اكتب)</label>
+                        <select id="newViewSelect" onchange="document.getElementById('newView').value = this.value === 'custom' ? '' : this.value" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 font-bold focus:outline-none mb-1">
+                            <option value="على حديقة / لاند سكيب" selected>على حديقة / لاند سكيب</option>
+                            <option value="على حمام السباحة (Pool View)">على حمام السباحة (Pool View)</option>
+                            <option value="على البحر مباشرة">على البحر مباشرة</option>
+                            <option value="إطلالة على شارع رئيسي">إطلالة على شارع رئيسي</option>
+                            <option value="custom">✍️ كتابة إطلالة أخرى يدوياً...</option>
+                        </select>
+                        <input type="text" id="newView" value="على حديقة / لاند سكيب" placeholder="أو اكتب الإطلالة هنا..." class="w-full bg-brandBg border border-gray-200 rounded-xl p-2 font-bold focus:outline-none text-[11px]">
+                    </div>
+
+                    <!-- 4. رفع صورة الوحدة من الجهاز / استوديو الهاتف -->
+                    <div class="md:col-span-2 space-y-1">
+                        <label class="block font-bold text-brandGray mb-1">صورة الوحدة (اختر من الجهاز أو ضع رابط)</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="file" id="imageFileDrop" accept="image/*" onchange="handleImageUpload(this)" class="w-full bg-brandBg border border-gray-200 rounded-xl p-2 text-xs font-bold file:ml-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brandGold file:text-white cursor-pointer">
+                        </div>
+                        <input type="hidden" id="newImg" value="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80">
+                        <div id="image-preview-box" class="mt-2 w-24 h-24 rounded-xl overflow-hidden border border-gray-200 hidden relative">
+                            <img id="previewImgElement" src="" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-brandGray mb-1">وصف تفصيلي ومميزات الوحدة</label>
+                    <textarea id="newDesc" rows="2" placeholder="مكيف بالكامل، مطبخ مجهز..." class="w-full bg-brandBg border border-gray-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none"></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button id="save-btn-action" onclick="addNewRental()" class="flex-grow bg-brandGold text-white py-3 rounded-xl font-bold text-xs shadow hover:bg-brandGoldLight transition">نشر العقار على التطبيق فوراً</button>
+                    <button id="cancel-edit-btn" onclick="cancelEditMode()" class="hidden bg-gray-300 text-brandPrimary px-4 py-3 rounded-xl font-bold text-xs transition">إلغاء التعديل</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4 text-right">
+                <h3 class="text-base font-black text-brandPrimary flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-brandGold"></i> إدارة وحدات الإيجار الحالية
+                </h3>
+                <div id="admin-rentals-list" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: LIST YOUR PROPERTY SCREEN -->
+    <div id="tab-more" class="tab-content hidden py-8 px-6 container mx-auto max-w-2xl space-y-6 text-right">
+        
+        <!-- Header Banner -->
+        <div class="bg-brandPrimary text-white p-6 rounded-2xl shadow-md space-y-3 relative overflow-hidden">
+            <div class="absolute -left-4 -bottom-4 text-brandGold/20 text-8xl font-black"><i class="fa-solid fa-house-chimney"></i></div>
+            <h3 class="text-lg font-black text-brandGold">🏠 اعرض وحدتك معنا في منصة سمسار</h3>
+            <p class="text-xs text-gray-200 leading-relaxed">
+                لو عندك وحدة سكنية، شاليه في المصايف، أو وحدة تجارية للإيجار.. اترك التفاصيل وسنقوم بتسويقها وتأجيرها لك بأفضل سعر وبأسرع وقت!
+            </p>
+            <a href="https://wa.me/201000000000?text=السلام%20عليكم،%20أرغب%20في%20عرض%20وحدتي%20للإيجار%20مع%20منصة%20سمسار" target="_blank" class="inline-flex items-center gap-2 bg-brandGold hover:bg-brandGoldLight text-brandPrimary font-black px-4 py-2.5 rounded-xl text-xs transition shadow">
+                <i class="fa-brands fa-whatsapp text-sm"></i> تواصل معنا واتساب لعرض وحدتك
+            </a>
+        </div>
+
+        <!-- Direct WhatsApp Action Card for Property Owners -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4 text-center">
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
+                <i class="fa-brands fa-whatsapp"></i>
+            </div>
+            <h4 class="font-bold text-brandPrimary text-base">أسرع طريقة لإضافة وتأجير عقارك</h4>
+            <p class="text-xs text-brandGray max-w-md mx-auto leading-relaxed">
+                اضغط على الزر أدناه لإرسال تفاصيل وحدتك وصورها مباشرة عبر الواتساب لفريق الإدارة وسنوفر لك المستأجر المناسب فوراً.
+            </p>
+            <a href="https://wa.me/201000000000?text=السلام%20عليكم،%20لدي%20وحدة%20أرغب%20في%20عرضها%20للإيجار%20عبر%20تطبيق%20سمسار" target="_blank" class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl text-xs transition shadow-md w-full max-w-sm">
+                <i class="fa-brands fa-whatsapp text-base"></i> راسلنا عبر الواتساب الآن
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Modal: Details -->
+    <div id="projectModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 text-right text-xs">
+            <button onclick="closeModal()" class="absolute top-4 left-4 text-gray-400 hover:text-red-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            <h3 id="modalTitle" class="text-base font-black text-brandPrimary">تفاصيل الوحدة</h3>
+            <div class="h-44 rounded-xl overflow-hidden shadow-inner">
+                <img id="modalImg" src="" class="w-full h-full object-cover">
+            </div>
+            <div class="space-y-2">
+                <p class="text-brandGray font-semibold flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-brandGold"></i> <span id="modalLoc"></span></p>
+                <p id="modalDesc" class="text-brandGray/90 bg-brandBg p-3 rounded-xl border border-gray-100"></p>
+                <div class="flex flex-wrap gap-2 text-[11px] font-bold text-brandPrimary py-1">
+                    <span id="modalRoomsBaths" class="bg-gray-100 px-2.5 py-1 rounded-lg"></span>
+                    <span id="modalView" class="bg-brandGold/10 text-brandGold px-2.5 py-1 rounded-lg"></span>
+                    <span id="modalCategory" class="bg-gray-100 px-2.5 py-1 rounded-lg"></span>
+                    <span id="modalFurnished" class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg"></span>
+                    <span id="modalFeatures" class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg"></span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <div>
+                        <span class="text-[10px] text-brandGray block">قيمة الإيجار</span>
+                        <span id="modalPrice" class="text-sm font-black text-brandGold"></span>
+                    </div>
+                    <span id="modalSub" class="bg-brandGold/10 text-brandGold px-2.5 py-1 rounded-full font-bold text-[10px]"></span>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <a id="modalWhatsAppBtn" href="#" target="_blank" class="flex-grow bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 transition">
+                    <i class="fa-brands fa-whatsapp text-sm"></i> استفسر عن الوحدة عبر واتساب
+                </a>
+                <button onclick="closeModal()" class="bg-gray-200 text-brandPrimary px-4 py-3 rounded-xl font-bold transition">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-6 z-50 shadow-2xl">
+        <div class="flex justify-around items-center max-w-md mx-auto text-center text-brandGray">
+            <div onclick="switchTab('rentals')" id="nav-rentals" class="flex flex-col items-center cursor-pointer text-brandGold font-bold transition">
+                <i class="fa-solid fa-key text-base mb-0.5"></i>
+                <span class="text-[10px]">الإيجار</span>
+            </div>
+            <div onclick="switchTab('wishlist')" id="nav-wishlist" class="flex flex-col items-center cursor-pointer hover:text-brandGold transition relative">
+                <i class="fa-solid fa-heart text-base mb-0.5"></i>
+                <span class="text-[10px]">المفضلة</span>
+                <span id="wishlist-badge" class="absolute -top-1 right-2 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
+            </div>
+            <div onclick="switchTab('crm')" id="nav-crm" class="flex flex-col items-center cursor-pointer hover:text-brandGold transition">
+                <i class="fa-solid fa-user-shield text-base mb-0.5"></i>
+                <span class="text-[10px]">الطلبات</span>
+            </div>
+            <div onclick="switchTab('more')" id="nav-more" class="flex flex-col items-center cursor-pointer hover:text-brandGold transition">
+                <i class="fa-solid fa-house-circle-check text-base mb-0.5"></i>
+                <span class="text-[10px]">اعرض وحدتك</span>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        // PWA Service Worker Registration
+        // SEMSAR PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+            });
+        }
+
+        let wishlist = JSON.parse(localStorage.getItem('semsar_rent_wishlist')) || [];
+        let leads = JSON.parse(localStorage.getItem('semsar_rent_leads')) || [];
+        
+        let currentRentalLocation = 'الكل';
+        let currentRentalCategory = 'الكل';
+        let currentClientSub = 'الكل';
+        let currentPropertyType = 'الكل';
+        let currentCommercialType = 'الكل';
+        let currentVacationSub = 'الكل';
+        let currentVacationProp = 'الكل';
+        let currentRentalSubFilter = 'الكل';
+        let currentFurnishedFilter = 'الكل';
+
+        let selectedAdminCat = 'سكني';
+        let selectedAdminResType = 'داخل كومباوند';
+        let selectedAdminReg = 'القاهرة الجديدة';
+
+        let adminPassword = localStorage.getItem('semsar_rent_admin_pass') || 'omar2026';
+        let isEditingMode = false;
+        let currentEditId = null;
+
+        const defaultRentals = [
+            { id: 'r1', title: 'شقة مفروشة فاخرة في التجمع الخامس', loc: 'التجمع الخامس، شارع التسعين', priceVal: 45000, price: '45,000 جنيه / شهرياً', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80', rentalSub: 'شهري', furnished: 'مفروش', propType: 'شقة', features: 'مكيف بالكامل / مسموح بالحيوانات الأليفة', desc: 'شقة 3 غرف تشطيب راقي ومفروشة بالكامل.', region: 'القاهرة الجديدة', rentalCat: 'سكني', resType: 'داخل كومباوند', roomsBaths: '3 غرف / 2 حمام', view: 'على حديقة / لاند سكيب' },
+            { id: 'r2', title: 'شاليه صف أول في الساحل الشمالي', loc: 'الكيلو 105، مارينا', priceVal: 6000, price: '6,000 جنيه / يومياً', img: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=800&q=80', rentalSub: 'يومي', furnished: 'مفروش', propType: 'شاليه', features: 'مكيف بالكامل', desc: 'شاليه مجهز بالكامل ومكيف.', region: 'الساحل الشمالي', rentalCat: 'مصايف', resType: '', roomsBaths: '2 غرف / 2 حمام', view: 'على البحر مباشرة' },
+            { id: 'r3', title: 'محل تجاري للإيجار في مول شهير', loc: 'شارع التسعين الجنوبي', priceVal: 35000, price: '35,000 جنيه / شهرياً', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80', rentalSub: 'شهري', furnished: 'غير مفروش', propType: 'محل', features: 'مكيف بالكامل', desc: 'محل مساحة ممتازة للأنشطة المختلفة.', region: 'القاهرة الجديدة', rentalCat: 'تجاري', resType: '', roomsBaths: 'استوديو', view: 'إطلالة على شارع رئيسي' }
+        ];
+
+        let rentalsList = JSON.parse(localStorage.getItem('semsar_custom_rentals_app')) || defaultRentals;
+
+        function saveRentalsToStorage() {
+            localStorage.setItem('semsar_custom_rentals_app', JSON.stringify(rentalsList));
+        }
+
+        function handleImageUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('newImg').value = e.target.result;
+                    const previewBox = document.getElementById('image-preview-box');
+                    const previewImg = document.getElementById('previewImgElement');
+                    previewImg.src = e.target.result;
+                    previewBox.classList.remove('hidden');
+                    showToast('تم تحميل الصورة بنجاح!', 'success');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-brandPrimary text-white' : 'bg-brandGold text-white';
+            toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-xl text-xs font-bold flex items-center justify-between pointer-events-auto transition transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<span>${message}</span> <i class="fa-solid fa-circle-check text-brandGold ml-2"></i>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+            setTimeout(() => { toast.classList.add('translate-y-2', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const targetTab = document.getElementById('tab-' + tabName);
+            if(targetTab) targetTab.classList.remove('hidden');
+            
+            document.querySelectorAll('nav div[onclick]').forEach(el => {
+                el.classList.remove('text-brandGold', 'font-bold');
+                el.classList.add('text-brandGray');
+            });
+            const activeNav = document.getElementById('nav-' + tabName);
+            if(activeNav) {
+                activeNav.classList.add('text-brandGold', 'font-bold');
+                activeNav.classList.remove('text-brandGray');
+            }
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            if(tabName === 'rentals') renderRentalsTab();
+            if(tabName === 'wishlist') renderWishlist();
+            if(tabName === 'crm') renderCRMLeads();
+            if(tabName === 'admin') renderAdminRentalsList();
+        }
+
+        function filterByPriceRange(maxVal) {
+            document.getElementById('priceRangeVal').innerText = Number(maxVal).toLocaleString() + ' جنيه';
+            renderRentalsTab();
+        }
+
+        function toggleDropdown(dropdownId, event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById(dropdownId);
+            const isHidden = dropdown.classList.contains('hidden');
+            document.querySelectorAll('[id$="-dropdown"]').forEach(el => el.classList.add('hidden'));
+            if (isHidden) dropdown.classList.remove('hidden');
+        }
+
+        function closeAllDropdowns(event) {
+            if (!event.target.closest('.relative')) {
+                document.querySelectorAll('[id$="-dropdown"]').forEach(el => el.classList.add('hidden'));
+            }
+        }
+
+        function selectDuration(value, text) {
+            currentRentalSubFilter = value;
+            document.getElementById('current-duration-text').innerText = text;
+            document.getElementById('duration-dropdown').classList.add('hidden');
+            renderRentalsTab();
+        }
+
+        function selectFurnished(value, text) {
+            currentFurnishedFilter = value;
+            document.getElementById('current-furnished-text').innerText = text;
+            document.getElementById('furnished-dropdown').classList.add('hidden');
+            renderRentalsTab();
+        }
+
+        function filterRentalLocation(locName) {
+            currentRentalLocation = locName;
+            
+            ['الكل', 'القاهرة الجديدة', 'الشيخ زايد', 'الساحل الشمالي', 'الجونة', 'العين السخنة'].forEach(name => {
+                let img = document.getElementById('loc-img-' + name);
+                let icon = document.getElementById('loc-icon-' + name);
+                let span = document.querySelector(`[onclick="filterRentalLocation('${name}')"] span`);
+                if(img) img.className = "w-14 h-14 rounded-full object-cover mb-1.5 border-2 border-gray-200 hover:border-brandGold shadow-sm transition";
+                if(icon) icon.className = "w-14 h-14 rounded-full overflow-hidden mb-1.5 bg-brandPrimary text-white flex items-center justify-center font-bold shadow-sm border-2 border-brandPrimary transition text-lg";
+                if(span) span.className = "text-[11px] font-bold text-brandPrimary";
+            });
+
+            let activeImg = document.getElementById('loc-img-' + locName);
+            let activeIcon = document.getElementById('loc-icon-' + locName);
+            let activeSpan = document.querySelector(`[onclick="filterRentalLocation('${locName}')"] span`);
+            
+            if(activeImg) activeImg.className = "w-14 h-14 rounded-full object-cover mb-1.5 border-4 border-brandGold shadow-lg scale-110 transition";
+            if(activeIcon) activeIcon.className = "w-14 h-14 rounded-full overflow-hidden mb-1.5 bg-brandGold text-white flex items-center justify-center font-bold shadow-lg border-4 border-brandGold scale-110 transition text-lg";
+            if(activeSpan) activeSpan.className = "text-[11px] font-black text-brandGold";
+
+            renderRentalsTab();
+        }
+
+        function filterVacationSub(subName) {
+            currentVacationSub = subName;
+            document.querySelectorAll('.vsub-btn').forEach(btn => {
+                btn.className = "vsub-btn bg-white text-brandPrimary border border-gray-200 px-3.5 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition";
+            });
+            document.getElementById('vsub-' + subName).className = "vsub-btn bg-brandPrimary text-white px-3.5 py-1.5 rounded-full font-semibold cursor-pointer transition";
+            renderRentalsTab();
+        }
+
+        function filterVacationProp(propName) {
+            currentVacationProp = propName;
+            document.querySelectorAll('.vprop-btn').forEach(btn => {
+                btn.className = "vprop-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition";
+            });
+            document.getElementById('vprop-' + propName).className = "vprop-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition shadow-sm";
+            renderRentalsTab();
+        }
+
+        function filterPropertyPill(value) {
+            currentPropertyType = value;
+            document.querySelectorAll('.ppill-btn').forEach(btn => {
+                btn.className = "ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition";
+            });
+            document.getElementById('ppill-' + value).className = "ppill-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition shadow-sm";
+            renderRentalsTab();
+        }
+
+        function updatePropertyTypePills(subVal) {
+            const pillsContainer = document.getElementById('property-type-pills-container');
+            const label = document.getElementById('property-type-label');
+            currentPropertyType = 'الكل';
+            
+            if (currentRentalCategory === 'سكني') {
+                if (subVal === 'خارج كومباوند') {
+                    label.innerText = 'نوع الوحدة (خارج كومباوند - 3 خيارات):';
+                    pillsContainer.innerHTML = `
+                        <span onclick="filterPropertyPill('الكل')" id="ppill-الكل" class="ppill-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition shadow-sm">🌐 الكل</span>
+                        <span onclick="filterPropertyPill('شقة')" id="ppill-شقة" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏢 شقة</span>
+                        <span onclick="filterPropertyPill('دوبلكس')" id="ppill-دوبلكس" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏠 دوبلكس</span>
+                        <span onclick="filterPropertyPill('فيلا')" id="ppill-فيلا" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏰 فيلا</span>
+                    `;
+                } else {
+                    label.innerText = 'نوع الوحدة (داخل كومباوند):';
+                    pillsContainer.innerHTML = `
+                        <span onclick="filterPropertyPill('الكل')" id="ppill-الكل" class="ppill-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition shadow-sm">🌐 الكل</span>
+                        <span onclick="filterPropertyPill('استوديو')" id="ppill-استوديو" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🚪 استوديو</span>
+                        <span onclick="filterPropertyPill('شقة')" id="ppill-شقة" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏢 شقة</span>
+                        <span onclick="filterPropertyPill('دوبلكس')" id="ppill-دوبلكس" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏠 دوبلكس</span>
+                        <span onclick="filterPropertyPill('تاون هاوس')" id="ppill-تاون هاوس" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏘️ تاون هاوس</span>
+                        <span onclick="filterPropertyPill('توين هاوس')" id="ppill-توين هاوس" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏡 توين هاوس</span>
+                        <span onclick="filterPropertyPill('فيلا منفصلة')" id="ppill-فيلا منفصلة" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏰 فيلا منفصلة</span>
+                    `;
+                }
+            } else if (currentRentalCategory === 'تجاري') {
+                label.innerText = 'نوع الوحدة التجارية:';
+                pillsContainer.innerHTML = `
+                    <span onclick="filterPropertyPill('الكل')" id="ppill-الكل" class="ppill-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition shadow-sm">🌐 الكل</span>
+                    <span onclick="filterPropertyPill('مول')" id="ppill-مول" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🏢 مول</span>
+                    <span onclick="filterPropertyPill('محل')" id="ppill-محل" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🛍️ محل</span>
+                    <span onclick="filterPropertyPill('مكتب')" id="ppill-مكتب" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">💼 مكتب</span>
+                    <span onclick="filterPropertyPill('عيادة')" id="ppill-عيادة" class="ppill-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition">🩺 عيادة</span>
+                `;
+            }
+        }
+
+        function filterClientSub(subVal) {
+            currentClientSub = subVal;
+            currentPropertyType = 'الكل';
+            document.querySelectorAll('.client-sub-btn').forEach(btn => {
+                btn.className = "client-sub-btn bg-white text-brandPrimary border border-gray-200 px-3 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition";
+            });
+            document.getElementById('csub-' + subVal).className = "client-sub-btn bg-brandPrimary text-white px-3 py-1.5 rounded-full font-bold cursor-pointer transition";
+            
+            const propTypeBox = document.getElementById('property-type-filter-box');
+            if (subVal === 'داخل كومباوند' || subVal === 'خارج كومباوند') {
+                propTypeBox.classList.remove('hidden');
+                updatePropertyTypePills(subVal);
+            } else {
+                propTypeBox.classList.add('hidden');
+            }
+
+            renderRentalsTab();
+        }
+
+        function filterRentalCategory(catName) {
+            currentRentalCategory = catName;
+            currentClientSub = 'الكل';
+            currentPropertyType = 'الكل';
+            currentCommercialType = 'الكل';
+            currentVacationSub = 'الكل';
+            currentVacationProp = 'الكل';
+            
+            document.querySelectorAll('.rental-cat-btn').forEach(btn => {
+                btn.className = "rental-cat-btn bg-white text-brandPrimary border border-gray-200 px-4 py-2 rounded-full font-semibold cursor-pointer hover:border-brandGold transition";
+            });
+            document.getElementById('rcat-' + catName).className = "rental-cat-btn bg-brandPrimary text-white px-4 py-2 rounded-full font-bold cursor-pointer transition";
+
+            const subFilterBox = document.getElementById('client-sub-filter-box');
+            const vacationSubBox = document.getElementById('vacation-sub-filter-box');
+            const propTypeBox = document.getElementById('property-type-filter-box');
+            
+            propTypeBox.classList.add('hidden');
+
+            if (catName === 'سكني') {
+                subFilterBox.classList.remove('hidden');
+                vacationSubBox.classList.add('hidden');
+                document.querySelectorAll('.client-sub-btn').forEach(b => {
+                    b.className = "client-sub-btn bg-white text-brandPrimary border border-gray-200 px-3.5 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition";
+                });
+                document.getElementById('csub-الكل').className = "client-sub-btn bg-brandPrimary text-white px-3.5 py-1.5 rounded-full font-bold cursor-pointer transition";
+            } else if (catName === 'تجاري') {
+                subFilterBox.classList.add('hidden');
+                vacationSubBox.classList.add('hidden');
+                propTypeBox.classList.remove('hidden');
+                updatePropertyTypePills('تجاري');
+            } else if (catName === 'مصايف') {
+                vacationSubBox.classList.remove('hidden');
+                subFilterBox.classList.add('hidden');
+                document.querySelectorAll('.vsub-btn').forEach(b => {
+                    b.className = "vsub-btn bg-white text-brandPrimary border border-gray-200 px-3.5 py-1.5 rounded-full font-semibold cursor-pointer hover:border-brandGold transition";
+                });
+                document.getElementById('vsub-الكل').className = "vsub-btn bg-brandPrimary text-white px-3.5 py-1.5 rounded-full font-semibold cursor-pointer transition";
+            } else {
+                subFilterBox.classList.add('hidden');
+                vacationSubBox.classList.add('hidden');
+            }
+
+            renderRentalsTab();
+        }
+
+        function setAdminCategory(cat) {
+            selectedAdminCat = cat;
+            document.querySelectorAll('.admin-cat-btn').forEach(btn => {
+                btn.className = "admin-cat-btn flex-1 bg-brandBg text-brandPrimary border border-gray-200 py-2.5 rounded-xl font-semibold transition hover:border-brandGold";
+            });
+            document.getElementById('adm-cat-' + cat).className = "admin-cat-btn flex-1 bg-brandPrimary text-white py-2.5 rounded-xl font-bold transition shadow-sm";
+
+            const subBox = document.getElementById('residential-sub-box');
+            const propTypeSelect = document.getElementById('newPropType');
+
+            if(cat === 'سكني') {
+                subBox.classList.remove('hidden');
+            } else {
+                subBox.classList.add('hidden');
+            }
+
+            if(cat === 'تجاري') {
+                propTypeSelect.innerHTML = `
+                    <option value="مول">مول</option>
+                    <option value="محل" selected>محل</option>
+                    <option value="مكتب">مكتب</option>
+                    <option value="عيادة">عيادة</option>
+                `;
+            } else if(cat === 'مصايف') {
+                propTypeSelect.innerHTML = `
+                    <option value="كابينا" selected>كابينا</option>
+                    <option value="استوديو">استوديو</option>
+                    <option value="شاليه">شاليه</option>
+                    <option value="فيلا">فيلا</option>
+                `;
+            } else {
+                propTypeSelect.innerHTML = `
+                    <option value="استوديو">استوديو</option>
+                    <option value="شقة" selected>شقة</option>
+                    <option value="دوبلكس">دوبلكس</option>
+                    <option value="تاون هاوس">تاون هاوس</option>
+                    <option value="توين هاوس">توين هاوس</option>
+                    <option value="فيلا منفصلة">فيلا منفصلة</option>
+                `;
+            }
+
+            renderAdminRegionsOptions();
+        }
+
+        function renderAdminRegionsOptions() {
+            const container = document.getElementById('admin-regions-container');
+            if(selectedAdminCat === 'مصايف') {
+                selectedAdminReg = 'الساحل الشمالي';
+                container.innerHTML = `
+                    <button type="button" onclick="setAdminRegion('الساحل الشمالي')" id="adm-reg-الساحل الشمالي" class="admin-reg-btn bg-brandPrimary text-white px-3.5 py-2 rounded-xl font-bold transition shadow-sm">الساحل الشمالي</button>
+                    <button type="button" onclick="setAdminRegion('الجونة')" id="adm-reg-الجونة" class="admin-reg-btn bg-brandBg text-brandPrimary border border-gray-200 px-3.5 py-2 rounded-xl font-semibold transition hover:border-brandGold">الجونة</button>
+                    <button type="button" onclick="setAdminRegion('العين السخنة')" id="adm-reg-العين السخنة" class="admin-reg-btn bg-brandBg text-brandPrimary border border-gray-200 px-3.5 py-2 rounded-xl font-semibold transition hover:border-brandGold">العين السخنة</button>
+                `;
+            } else {
+                selectedAdminReg = 'القاهرة الجديدة';
+                container.innerHTML = `
+                    <button type="button" onclick="setAdminRegion('القاهرة الجديدة')" id="adm-reg-القاهرة الجديدة" class="admin-reg-btn bg-brandPrimary text-white px-3.5 py-2 rounded-xl font-bold transition shadow-sm">القاهرة الجديدة</button>
+                    <button type="button" onclick="setAdminRegion('الشيخ زايد')" id="adm-reg-الشيخ زايد" class="admin-reg-btn bg-brandBg text-brandPrimary border border-gray-200 px-3.5 py-2 rounded-xl font-semibold transition hover:border-brandGold">الشيخ زايد</button>
+                `;
+            }
+        }
+
+        function setAdminResType(resType) {
+            selectedAdminResType = resType;
+            document.querySelectorAll('.admin-res-btn').forEach(btn => {
+                btn.className = "admin-res-btn flex-1 bg-white text-brandPrimary border border-gray-200 py-2 rounded-lg font-semibold transition";
+            });
+            document.getElementById('adm-res-' + resType).className = "admin-res-btn flex-1 bg-brandPrimary text-white py-2 rounded-lg font-bold transition";
+        }
+
+        function setAdminRegion(reg) {
+            selectedAdminReg = reg;
+            document.querySelectorAll('.admin-reg-btn').forEach(btn => {
+                btn.className = "admin-reg-btn bg-brandBg text-brandPrimary border border-gray-200 px-3.5 py-2 rounded-xl font-semibold transition hover:border-brandGold";
+            });
+            document.getElementById('adm-reg-' + reg).className = "admin-reg-btn bg-brandPrimary text-white px-3.5 py-2 rounded-xl font-bold transition shadow-sm";
+        }
+
+        function handleSearch(query) {
+            renderRentalsTab(query);
+        }
+
+        function renderRentalsTab(searchQuery = '') {
+            const maxPrice = parseFloat(document.getElementById('priceRange').value) || 200000;
+            const container = document.getElementById('rentals-list-container');
+            const q = searchQuery.toLowerCase().trim();
+
+            let list = rentalsList.filter(r => {
+                let matchLoc = true;
+                if (currentRentalLocation !== 'الكل') {
+                    matchLoc = (r.region === currentRentalLocation);
+                } else if (currentRentalCategory === 'مصايف' && currentVacationSub !== 'الكل') {
+                    matchLoc = (r.region === currentVacationSub);
+                }
+
+                const matchCat = (currentRentalCategory === 'الكل') || (r.rentalCat === currentRentalCategory);
+                const matchSub = (currentClientSub === 'الكل') || (r.resType === currentClientSub);
+                const matchPropType = (currentPropertyType === 'الكل') || (r.propType === currentPropertyType);
+                const matchVacProp = (currentVacationProp === 'الكل') || (r.propType === currentVacationProp);
+                const matchRentalSub = (currentRentalSubFilter === 'الكل') || (r.rentalSub === currentRentalSubFilter);
+                const matchFurnished = (currentFurnishedFilter === 'الكل') || (r.furnished === currentFurnishedFilter);
+                const matchPrice = (r.priceVal || 10000) <= maxPrice;
+                const matchSearch = !q || r.title.toLowerCase().includes(q) || r.loc.toLowerCase().includes(q) || (r.view && r.view.toLowerCase().includes(q)) || (r.desc && r.desc.toLowerCase().includes(q));
+                
+                return matchLoc && matchCat && matchSub && matchPropType && matchVacProp && matchRentalSub && matchFurnished && matchPrice && matchSearch;
+            });
+
+            document.getElementById('results-count').innerText = `${list.length} وحدة`;
+
+            if(list.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-brandGray text-xs border border-gray-200">لا توجد وحدات إيجار تطابق خيارات البحث الحالية.</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(r => `
+                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm relative">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${r.img}" alt="${r.title}" class="w-full h-full object-cover">
+                        <button onclick="toggleWishlist(this, '${r.id}')" class="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center ${wishlist.includes(r.id) ? 'text-red-500' : 'text-gray-400'} shadow">
+                            <i class="fa-solid fa-heart"></i>
+                        </button>
+                        <span class="absolute bottom-4 right-4 text-[10px] bg-brandGold text-white px-3 py-1 rounded-full font-bold">${r.rentalCat || 'عقار'} ${r.resType ? '- ' + r.resType : ''} (${r.furnished || 'مفروش'})</span>
+                    </div>
+                    <div class="p-5">
+                        <h4 class="text-base font-black text-brandPrimary">${r.title}</h4>
+                        <p class="text-xs text-brandGray mt-1"><i class="fa-solid fa-location-dot text-brandGold ml-1"></i> ${r.loc} (${r.region || 'عام'})</p>
+                        <div class="flex flex-wrap gap-2 text-[11px] font-bold text-brandPrimary my-2">
+                            <span class="bg-gray-100 px-2.5 py-1 rounded-lg"><i class="fa-solid fa-building text-brandGold ml-1"></i> ${r.propType || 'وحدة'}</span>
+                            <span class="bg-gray-100 px-2.5 py-1 rounded-lg"><i class="fa-solid fa-eye text-brandGold ml-1"></i> ${r.view || 'إطلالة مميزة'}</span>
+                            <span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg">${r.furnished || 'مفروش'}</span>
+                            ${r.features ? `<span class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg">${r.features}</span>` : ''}
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] text-brandGray block">قيمة الإيجار</span>
+                                <span class="text-xs font-black text-brandGold">${r.price}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick='openModal(${JSON.stringify(r)})' class="bg-brandPrimary text-white text-xs px-3.5 py-2.5 rounded-xl font-semibold shadow">التفاصيل</button>
+                                <a href="https://wa.me/201000000000?text=${encodeURIComponent(`استفسار بخصوص الوحدة: ${r.title} (${r.price})`)}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-2.5 rounded-xl font-bold flex items-center gap-1 transition"><i class="fa-brands fa-whatsapp"></i> واتساب</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleWishlist(btn, id) {
+            const index = wishlist.indexOf(id);
+            if(index > -1) {
+                wishlist.splice(index, 1);
+                btn.className = "absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-400 shadow";
+            } else {
+                wishlist.push(id);
+                btn.className = "absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-red-500 shadow";
+            }
+            localStorage.setItem('semsar_rent_wishlist', JSON.stringify(wishlist));
+            updateWishlistBadge();
+        }
+
+        function updateWishlistBadge() {
+            const badge = document.getElementById('wishlist-badge');
+            if(wishlist.length > 0) { badge.innerText = wishlist.length; badge.classList.remove('hidden'); }
+            else { badge.classList.add('hidden'); }
+        }
+
+        function renderWishlist() {
+            const container = document.getElementById('wishlist-container');
+            let map = {};
+            rentalsList.forEach(r => { map[r.id] = r; });
+
+            if(wishlist.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-brandGray text-xs bg-white rounded-2xl border border-gray-200">لم تقم بحفظ أي وحدات بعد.</div>`;
+                return;
+            }
+            container.innerHTML = wishlist.map(id => {
+                const p = map[id]; if(!p) return '';
+                return `<div class="bg-white rounded-2xl border border-gray-200 p-3.5 flex items-center gap-3.5 text-xs shadow-sm hover:border-brandGold transition">
+                    <img src="${p.img}" class="w-20 h-20 object-cover rounded-xl cursor-pointer" onclick='openModal(${JSON.stringify(p)})'>
+                    <div class="flex-grow cursor-pointer" onclick='openModal(${JSON.stringify(p)})'>
+                        <h4 class="font-black text-brandPrimary text-sm">${p.title}</h4>
+                        <p class="text-brandGray mt-0.5"><i class="fa-solid fa-location-dot text-brandGold ml-1"></i> ${p.loc}</p>
+                        <p class="text-brandGold font-black mt-1">${p.price}</p>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <button onclick='openModal(${JSON.stringify(p)})' class="bg-brandPrimary text-white p-2.5 rounded-xl shadow hover:bg-slate-800 transition"><i class="fa-solid fa-eye"></i></button>
+                        <button onclick="toggleWishlistByList('${id}')" class="bg-red-50 text-red-500 hover:bg-red-100 p-2.5 rounded-xl transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleWishlistByList(id) {
+            wishlist = wishlist.filter(item => item !== id);
+            localStorage.setItem('semsar_rent_wishlist', JSON.stringify(wishlist));
+            updateWishlistBadge(); renderWishlist();
+            showToast('تم إزالة الوحدة من المفضلة', 'info');
+        }
+
+        function verifyAdminLogin() {
+            const pass = document.getElementById('adminPasswordInput').value;
+            if(pass === adminPassword) {
+                document.getElementById('admin-login-box').classList.add('hidden');
+                document.getElementById('admin-dashboard-box').classList.remove('hidden');
+                renderAdminRentalsList();
+                renderAdminRegionsOptions();
+                showToast('مرحباً بك في لوحة تحكم تطبيق سمسار!', 'success');
+            } else { alert('كلمة المرور غير صحيحة!'); }
+        }
+
+        function updateAdminPassword() {
+            const newPass = document.getElementById('newAdminPass').value.trim();
+            if(!newPass) { alert('الرجاء إدخال كلمة المرور الجديدة.'); return; }
+            adminPassword = newPass;
+            localStorage.setItem('semsar_rent_admin_pass', newPass);
+            document.getElementById('newAdminPass').value = '';
+            showToast('تم تحديث كلمة المرور بنجاح!', 'success');
+        }
+
+        function lockAdmin() {
+            document.getElementById('admin-login-box').classList.remove('hidden');
+            document.getElementById('admin-dashboard-box').classList.add('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+        }
+
+        function addNewRental() {
+            const title = document.getElementById('newTitle').value.trim();
+            const region = selectedAdminReg;
+            const loc = document.getElementById('newLoc').value.trim();
+            const priceVal = parseFloat(document.getElementById('newPriceVal').value) || 10000;
+            const propType = document.getElementById('newPropType').value;
+            const rentalSub = document.getElementById('newRentalSub').value;
+            const furnished = document.getElementById('newFurnishedStatus').value;
+            const features = document.getElementById('newFeatures').value.trim();
+            
+            let suffix = ' / شهرياً';
+            if(rentalSub === 'يومي') suffix = ' / يومياً';
+            if(rentalSub === 'سنوي') suffix = ' / سنوياً';
+
+            const price = priceVal.toLocaleString() + ' جنيه' + suffix;
+            const roomsBaths = document.getElementById('newRoomsBaths').value.trim() || 'غرف متعددة';
+            const view = document.getElementById('newView').value.trim() || 'إطلالة مميزة';
+            const rentalCat = selectedAdminCat;
+            const resType = (rentalCat === 'سكني') ? selectedAdminResType : '';
+            const img = document.getElementById('newImg').value.trim();
+            const desc = document.getElementById('newDesc').value.trim();
+
+            if(!title || !loc) { alert('أدخل العنوان والموقع.'); return; }
+
+            if (isEditingMode) {
+                rentalsList = rentalsList.map(r => {
+                    if (String(r.id) === String(currentEditId)) {
+                        return { ...r, title, region, loc, priceVal, price, propType, roomsBaths, view, rentalCat, resType, rentalSub, furnished, features, img, desc };
+                    }
+                    return r;
+                });
+                saveRentalsToStorage();
+                showToast('تم تحديث العقار بنجاح!', 'success');
+                cancelEditMode();
+            } else {
+                const newId = 'r_' + Date.now();
+                rentalsList.unshift({ id: newId, title, region, loc, priceVal, price, propType, roomsBaths, view, rentalCat, resType, rentalSub, furnished, features, img, desc });
+                saveRentalsToStorage();
+                showToast('تم نشر العقار بنجاح!', 'success');
+            }
+            renderAdminRentalsList();
+        }
+
+        function editRental(id) {
+            let item = rentalsList.find(r => String(r.id) === String(id));
+            if(!item) return;
+
+            setAdminCategory(item.rentalCat || 'سكني');
+            document.getElementById('newTitle').value = item.title || '';
+            document.getElementById('newLoc').value = item.loc || '';
+            document.getElementById('newPriceVal').value = item.priceVal || '';
+            document.getElementById('newPropType').value = item.propType || 'شقة';
+            document.getElementById('newRentalSub').value = item.rentalSub || 'شهري';
+            document.getElementById('newFurnishedStatus').value = item.furnished || 'مفروش';
+            document.getElementById('newFeatures').value = item.features || '';
+            document.getElementById('newRoomsBaths').value = item.roomsBaths || '';
+            document.getElementById('newView').value = item.view || '';
+            document.getElementById('newImg').value = item.img || '';
+            document.getElementById('newDesc').value = item.desc || '';
+
+            if(item.img) {
+                const previewBox = document.getElementById('image-preview-box');
+                const previewImg = document.getElementById('previewImgElement');
+                previewImg.src = item.img;
+                previewBox.classList.remove('hidden');
+            }
+
+            if(item.rentalCat === 'سكني' && item.resType) {
+                setAdminResType(item.resType);
+            }
+            if(item.region) {
+                setAdminRegion(item.region);
+            }
+
+            isEditingMode = true;
+            currentEditId = id;
+
+            document.getElementById('form-heading-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brandGold"></i> تعديل بيانات العقار`;
+            document.getElementById('save-btn-action').innerText = 'حفظ وتحديث التعديلات';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('تم تحميل بيانات العقار للتعديل', 'info');
+        }
+
+        function cancelEditMode() {
+            isEditingMode = false;
+            currentEditId = null;
+            document.getElementById('form-heading-title').innerHTML = `<i class="fa-solid fa-circle-plus text-brandGold"></i> إضافة عقار مرسل للإيجار`;
+            document.getElementById('save-btn-action').innerText = 'نشر العقار على التطبيق فوراً';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newLoc').value = '';
+            document.getElementById('newPriceVal').value = '';
+            document.getElementById('newFeatures').value = 'مكيف بالكامل / مسموح بالحيوانات الأليفة';
+            document.getElementById('newRoomsBaths').value = '3 غرف / 2 حمام';
+            document.getElementById('newView').value = 'على حديقة / لاند سكيب';
+            document.getElementById('newDesc').value = '';
+            document.getElementById('imageFileDrop').value = '';
+            document.getElementById('image-preview-box').classList.add('hidden');
+            setAdminCategory('سكني');
+        }
+
+        function renderAdminRentalsList() {
+            const container = document.getElementById('admin-rentals-list');
+            if(rentalsList.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 text-xs py-4">لا توجد عقارات مضافة.</p>`;
+                return;
+            }
+            container.innerHTML = rentalsList.map(r => `
+                <div class="flex justify-between items-center bg-brandBg p-3 rounded-xl text-xs border">
+                    <div><span class="font-bold">${r.title}</span><span class="text-[10px] text-brandGold block">نوع: ${r.rentalCat || 'عقار'} (${r.propType || ''}) - ${r.price}</span></div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="editRental('${r.id}')" class="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold">تعديل</button>
+                        <button type="button" onclick="deleteRental('${r.id}')" class="bg-red-500 text-white px-3.5 py-1 rounded-lg font-bold">حذف</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteRental(id) {
+            if(window.confirm('هل أنت متأكد من حذف هذا العقار نهائياً؟')) {
+                rentalsList = rentalsList.filter(r => String(r.id) !== String(id));
+                saveRentalsToStorage(); 
+                renderAdminRentalsList(); 
+                showToast('تم الحذف بنجاح', 'info');
+            }
+        }
+
+        function openModal(project) {
+            document.getElementById('modalTitle').innerText = project.title;
+            document.getElementById('modalImg').src = project.img;
+            document.getElementById('modalLoc').innerText = project.loc;
+            document.getElementById('modalDesc').innerText = project.desc || 'لا توجد تفاصيل إضافية.';
+            document.getElementById('modalPrice').innerText = project.price;
+            document.getElementById('modalRoomsBaths').innerText = project.roomsBaths || 'غرف متعددة';
+            document.getElementById('modalView').innerText = project.view || 'إطلالة مميزة';
+            document.getElementById('modalCategory').innerText = (project.rentalCat || 'عقار') + (project.resType ? ' (' + project.resType + ')' : '');
+            document.getElementById('modalFurnished').innerText = project.furnished || 'مفروش';
+            document.getElementById('modalFeatures').innerText = project.features || 'مميزات قياسية';
+            document.getElementById('modalSub').innerText = project.rentalSub ? 'إيجار ' + project.rentalSub : 'إيجار';
+            
+            const waBtn = document.getElementById('modalWhatsAppBtn');
+            waBtn.href = `https://wa.me/201000000000?text=${encodeURIComponent(`استفسار بخصوص تفاصيل الوحدة: ${project.title} - السعر: ${project.price}`)}`;
+
+            document.getElementById('projectModal').classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('projectModal').classList.add('hidden'); }
+
+        updateWishlistBadge();
+        renderRentalsTab();
+    </script>
+</body>
+</html>
